@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   Plane, MapPin, Utensils, Shirt, FileText, Plus, ArrowLeft,
   Check, X, ChevronRight, Globe, Calendar, Luggage, Sun, Cloud,
-  MapPinned, Star, Clock, Coffee, Search, RefreshCw
+  MapPinned, Star, Clock, Coffee, Search, RefreshCw, Trash2
 } from 'lucide-react';
 import { destinationCatalog } from './data';
 
@@ -85,6 +85,13 @@ function App() {
     setTrips(prev => [...prev, trip]);
     setNewTrip({ name: '', destination: '', date: '' });
     setShowNewTripModal(false);
+  };
+
+  const handleDeleteTrip = (id) => {
+    if (window.confirm('¿Estás seguro de que querés eliminar este viaje? Esta acción no se puede deshacer.')) {
+      setTrips(prev => prev.filter(t => t.id !== id));
+      navigateTo('home');
+    }
   };
 
   const toggleChecklistItem = (tripId, itemId) => {
@@ -392,12 +399,20 @@ function App() {
           <div className="relative h-56">
             <img src={trip.image} alt={trip.destination} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-            <button
-              onClick={goBack}
-              className="absolute top-4 left-4 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/30 transition-colors z-10"
-            >
-              <ArrowLeft className="w-5 h-5 text-white" />
-            </button>
+            <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
+              <button
+                onClick={() => navigateTo('home')}
+                className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all border border-white/20"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => handleDeleteTrip(trip.id)}
+                className="w-10 h-10 rounded-full bg-red-500/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-600 transition-all border border-red-400/20"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
             <div className="absolute bottom-0 left-0 right-0 p-5">
               <h1 className="text-white text-2xl font-bold">{trip.name}</h1>
               <div className="flex items-center gap-3 mt-1.5">
