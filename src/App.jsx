@@ -1,233 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Plane, MapPin, Utensils, Shirt, FileText, Plus, ArrowLeft,
   Check, X, ChevronRight, Globe, Calendar, Luggage, Sun, Cloud,
-  MapPinned, Star, Clock, Coffee
+  MapPinned, Star, Clock, Coffee, Search, RefreshCw
 } from 'lucide-react';
-
-// ─── DESTINATION CATALOG (Templates) ────────────────────────────────────────────
-
-const destinationCatalog = [
-  {
-    destination: 'Uruguay',
-    defaultName: 'Aventura en Uruguay',
-    image: 'https://images.unsplash.com/photo-1598981457915-aea220950616?w=800&q=80',
-    clothing: {
-      outfits: [
-        { id: 1, name: 'Look Playero', image: 'https://images.unsplash.com/photo-1523359346063-d879354c0ea5?w=400&q=80', desc: 'Bermudas, remera liviana y ojotas' },
-        { id: 2, name: 'Paseo Urbano', image: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=400&q=80', desc: 'Jeans, camisa y zapatillas cómodas' },
-        { id: 3, name: 'Noche de Tango', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', desc: 'Pantalón de vestir, camisa y zapatos' },
-      ],
-      checklist: [
-        { id: 1, text: 'Protector solar SPF 50', checked: false },
-        { id: 2, text: 'Traje de baño', checked: false },
-        { id: 3, text: 'Sombrero / Gorra', checked: false },
-        { id: 4, text: 'Lentes de sol', checked: false },
-        { id: 5, text: 'Sandalias', checked: false },
-        { id: 6, text: 'Ropa liviana de algodón', checked: false },
-      ]
-    },
-    places: [
-      { id: 1, time: 'Mañana', name: 'Playa Pocitos', desc: 'Icónica playa de Montevideo con paseo costanero', visited: false },
-      { id: 2, time: 'Mediodía', name: 'Mercado del Puerto', desc: 'Tradicional mercado gastronómico con parrillas', visited: false },
-      { id: 3, time: 'Tarde', name: 'Ciudad Vieja', desc: 'Barrio histórico con arquitectura colonial', visited: false },
-      { id: 4, time: 'Atardecer', name: 'Rambla de Montevideo', desc: 'Paseo costero de 22km con vistas al Río de la Plata', visited: false },
-    ],
-    restaurants: [
-      { id: 1, name: 'El Palenque', address: 'Mercado del Puerto, Montevideo', dress: 'Casual', desc: 'Parrilla tradicional. Pedir el asado de tira y la pamplona.', visited: false },
-      { id: 2, name: 'La Perdiz', address: 'Punta del Este', dress: 'Smart Casual', desc: 'Cocina de autor uruguaya. Probar el cordero patagónico.', visited: false },
-      { id: 3, name: 'Café Roldós', address: 'Ciudad Vieja, Montevideo', dress: 'Casual', desc: 'Histórico café. El cortado y los bizcochos son imperdibles.', visited: false },
-    ],
-    description: {
-      climate: 'Clima subtropical húmedo. Veranos cálidos (25-35°C) e inviernos templados (10-18°C). Llevar protector solar y ropa fresca en verano.',
-      culture: 'Uruguay es conocido por su calidez y tranquilidad. La cultura del mate es central en la vida cotidiana. El tango y el candombe son expresiones culturales fuertes.',
-      tips: 'La moneda es el peso uruguayo. Se acepta tarjeta en casi todos lados. Los uruguayos cenan tarde (después de las 21h). El wifi es excelente en todo el país.',
-      highlights: 'No te pierdas un atardecer en la Rambla, una visita a Colonia del Sacramento (Patrimonio UNESCO) y un asado tradicional con amigos.'
-    }
-  },
-  {
-    destination: 'Portugal',
-    defaultName: 'Descubriendo Portugal',
-    image: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=800&q=80',
-    clothing: {
-      outfits: [
-        { id: 1, name: 'Explorador Urbano', image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', desc: 'Zapatillas cómodas, pantalón chino y camisa' },
-        { id: 2, name: 'Playa del Algarve', image: 'https://images.unsplash.com/photo-1520367445093-50dc08a59d9d?w=400&q=80', desc: 'Bañador, camiseta y sandalias' },
-        { id: 3, name: 'Noche en Lisboa', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', desc: 'Look elegante casual para los bares de Bairro Alto' },
-      ],
-      checklist: [
-        { id: 1, text: 'Calzado cómodo para adoquines', checked: false },
-        { id: 2, text: 'Adaptador de enchufe europeo', checked: false },
-        { id: 3, text: 'Chaqueta ligera', checked: false },
-        { id: 4, text: 'Protector solar', checked: false },
-        { id: 5, text: 'Cámara de fotos', checked: false },
-      ]
-    },
-    places: [
-      { id: 1, time: 'Mañana', name: 'Torre de Belém', desc: 'Icónica torre del siglo XVI, Patrimonio Mundial', visited: false },
-      { id: 2, time: 'Mediodía', name: 'Pastéis de Belém', desc: 'Probar los famosos pasteles de nata originales', visited: false },
-      { id: 3, time: 'Tarde', name: 'Barrio de Alfama', desc: 'Callejuelas medievales con vistas al Tajo', visited: false },
-      { id: 4, time: 'Noche', name: 'Bairro Alto', desc: 'Vida nocturna y restaurantes con fado en vivo', visited: false },
-    ],
-    restaurants: [
-      { id: 1, name: 'Time Out Market', address: 'Cais do Sodré, Lisboa', dress: 'Casual', desc: 'Mercado gourmet con lo mejor de la gastronomía portuguesa. Probar el bacalao.', visited: false },
-      { id: 2, name: 'Cervejaria Ramiro', address: 'Av. Almirante Reis, Lisboa', dress: 'Casual', desc: 'Mariscos frescos espectaculares. El steak sandwich de postre es obligatorio.', visited: false },
-      { id: 3, name: 'Belcanto', address: 'Largo de São Carlos, Lisboa', dress: 'Elegante', desc: 'Restaurante con 2 estrellas Michelin del chef José Avillez.', visited: false },
-    ],
-    description: {
-      climate: 'Clima mediterráneo. Veranos secos y calurosos (25-35°C), inviernos suaves (8-15°C). Mayo es ideal con temperaturas agradables.',
-      culture: 'El fado es el alma musical de Portugal. La azulejería es arte callejero centenario. Los portugueses son hospitalarios y orgullosos de su gastronomía.',
-      tips: 'Usa la tarjeta Viva Viagem para el transporte. Los tranvías son icónicos pero llenos; madruga. El café (bica) cuesta ~€0.70.',
-      highlights: 'Imperdibles: Sintra y sus palacios de cuento, el Ponte 25 de Abril, un show de fado en Alfama y los atardeceres desde el Mirador de Santa Luzia.'
-    }
-  },
-  {
-    destination: 'España',
-    defaultName: 'España Inolvidable',
-    image: 'https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=800&q=80',
-    clothing: {
-      outfits: [
-        { id: 1, name: 'Tapeo por Madrid', image: 'https://images.unsplash.com/photo-1516826957135-700dedea698c?w=400&q=80', desc: 'Look casual chic: vaqueros, blusa y botines' },
-        { id: 2, name: 'Playa Barceloneta', image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&q=80', desc: 'Bañador, pareo y chanclas' },
-        { id: 3, name: 'Noche Flamenca', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&q=80', desc: 'Vestido o pantalón elegante con zapatos cómodos' },
-      ],
-      checklist: [
-        { id: 1, text: 'Abanico para el calor', checked: false },
-        { id: 2, text: 'Calzado para caminar mucho', checked: false },
-        { id: 3, text: 'Protector solar fuerte', checked: false },
-        { id: 4, text: 'Gafas de sol', checked: false },
-        { id: 5, text: 'Botella reutilizable', checked: false },
-        { id: 6, text: 'Vestimenta elegante para cena', checked: false },
-      ]
-    },
-    places: [
-      { id: 1, time: 'Mañana', name: 'La Sagrada Familia', desc: 'Obra maestra de Gaudí en Barcelona, reservar entrada', visited: false },
-      { id: 2, time: 'Mediodía', name: 'La Boquería', desc: 'Mercado emblemático con productos frescos y tapas', visited: false },
-      { id: 3, time: 'Tarde', name: 'Parque Güell', desc: 'Jardines mosaico de Gaudí con vistas panorámicas', visited: false },
-      { id: 4, time: 'Noche', name: 'Tablao Flamenco', desc: 'Show de flamenco auténtico en el barrio gótico', visited: false },
-    ],
-    restaurants: [
-      { id: 1, name: 'El Xampanyet', address: 'Barrio Born, Barcelona', dress: 'Casual', desc: 'Tapas catalanas tradicionales. Las anchoas y el cava de la casa son legendarios.', visited: false },
-      { id: 2, name: 'Sobrino de Botín', address: 'Calle Cuchilleros, Madrid', dress: 'Smart Casual', desc: 'Restaurante más antiguo del mundo (1725). El cochinillo asado es sublime.', visited: false },
-      { id: 3, name: 'Tickets Bar', address: 'Av. Paral·lel, Barcelona', dress: 'Smart Casual', desc: 'Tapas creativas de los hermanos Adrià. Reservar con meses de antelación.', visited: false },
-    ],
-    description: {
-      climate: 'Veranos calurosos (30-40°C), especialmente en el sur. Barcelona tiene brisa marina. La siesta (14-17h) es real; muchas tiendas cierran.',
-      culture: 'España vive intensamente: flamenco, fútbol, tapas y fiestas. La sobremesa (charla después de comer) es sagrada. No tengas prisa.',
-      tips: 'La cena empieza a las 21-22h. Las tapas se piden de a poco. El "menú del día" (almuerzo) es excelente relación calidad-precio (~€12-15).',
-      highlights: 'Barcelona: Gaudí y playas. Madrid: Prado y tapas en La Latina. Sevilla: Flamenco y la Giralda. Granada: La Alhambra al atardecer.'
-    }
-  },
-  {
-    destination: 'Italia',
-    defaultName: 'Dolce Vita en Italia',
-    image: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&q=80',
-    clothing: {
-      outfits: [
-        { id: 1, name: 'Paseo por Roma', image: 'https://images.unsplash.com/photo-1490367532201-b9bc1dc483f6?w=400&q=80', desc: 'Vestido veraniego o lino con zapatos cómodos' },
-        { id: 2, name: 'Costa Amalfitana', image: 'https://images.unsplash.com/photo-1469307517101-0b99d8fb0c33?w=400&q=80', desc: 'Look playero mediterráneo con sombrero de paja' },
-        { id: 3, name: 'Cena en Trastevere', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80', desc: 'Elegante pero desenfadado: estilo italiano' },
-      ],
-      checklist: [
-        { id: 1, text: 'Ropa que cubra hombros (iglesias)', checked: false },
-        { id: 2, text: 'Zapatos cómodos para adoquines', checked: false },
-        { id: 3, text: 'Protector solar', checked: false },
-        { id: 4, text: 'Pañuelo para cubrir hombros', checked: false },
-        { id: 5, text: 'Gafas de sol estilo italiano', checked: false },
-      ]
-    },
-    places: [
-      { id: 1, time: 'Mañana', name: 'Coliseo Romano', desc: 'Anfiteatro icónico del año 80 d.C. Reservar skip-the-line', visited: false },
-      { id: 2, time: 'Mediodía', name: 'Fontana di Trevi', desc: 'Lanzar una moneda y pedir un deseo', visited: false },
-      { id: 3, time: 'Tarde', name: 'Vaticano', desc: 'Capilla Sixtina y Plaza de San Pedro', visited: false },
-      { id: 4, time: 'Noche', name: 'Trastevere', desc: 'Barrio bohemio con las mejores trattorias', visited: false },
-    ],
-    restaurants: [
-      { id: 1, name: 'Da Enzo al 29', address: 'Trastevere, Roma', dress: 'Casual', desc: 'Trattoria auténtica. La cacio e pepe y la carbonara son divinas. Llegar temprano.', visited: false },
-      { id: 2, name: 'Pizzeria Da Michele', address: 'Via Sersale, Nápoles', dress: 'Casual', desc: 'Solo margherita o marinara. La pizza más famosa de Italia (~€5).', visited: false },
-      { id: 3, name: 'Osteria Francescana', address: 'Via Stella, Módena', dress: 'Elegante', desc: 'Del chef Massimo Bottura, 3 estrellas Michelin. Reservar con mucho tiempo.', visited: false },
-    ],
-    description: {
-      climate: 'Veranos calurosos (28-35°C). Roma y el sur son especialmente cálidos en julio-agosto. Las mañanas son ideales para visitar.',
-      culture: 'Italia es arte, historia y gastronomía. No pidas cappuccino después del mediodía (regla local). "La passeggiata" (paseo vespertino) es tradición.',
-      tips: 'El "coperto" (cubierto) se cobra en restaurantes (~€2-3). El café se toma en la barra (más barato). Los museos suelen cerrar los lunes.',
-      highlights: 'Roma: Historia en cada esquina. Florencia: El David y el Ponte Vecchio. Venecia: Góndolas y San Marcos. Costa Amalfitana: Paisajes de ensueño.'
-    }
-  },
-  {
-    destination: 'Grecia',
-    defaultName: 'Odisea en Grecia',
-    image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=800&q=80',
-    clothing: {
-      outfits: [
-        { id: 1, name: 'Isla Griega', image: 'https://images.unsplash.com/photo-1506152983158-b4a74a01c721?w=400&q=80', desc: 'Todo blanco y azul: vestido fluido y sandalias' },
-        { id: 2, name: 'Explorador de Ruinas', image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80', desc: 'Shorts, camiseta transpirable y calzado deportivo' },
-        { id: 3, name: 'Cena en Santorini', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', desc: 'Look mediterráneo elegante para la puesta de sol' },
-      ],
-      checklist: [
-        { id: 1, text: 'Protector solar resistente al agua', checked: false },
-        { id: 2, text: 'Snorkel', checked: false },
-        { id: 3, text: 'Ropa ultraliviana', checked: false },
-        { id: 4, text: 'Sandalias de agua', checked: false },
-        { id: 5, text: 'Sombrero de ala ancha', checked: false },
-      ]
-    },
-    places: [
-      { id: 1, time: 'Mañana', name: 'Acrópolis de Atenas', desc: 'El Partenón y templos del siglo V a.C.', visited: false },
-      { id: 2, time: 'Mediodía', name: 'Plaka', desc: 'Barrio antiguo al pie de la Acrópolis con tabernas', visited: false },
-      { id: 3, time: 'Tarde', name: 'Oia, Santorini', desc: 'Pueblo de cúpulas azules y casas blancas', visited: false },
-      { id: 4, time: 'Atardecer', name: 'Caldera de Santorini', desc: 'El atardecer más fotografiado del mundo', visited: false },
-    ],
-    restaurants: [
-      { id: 1, name: 'Ammoudi Fish Tavern', address: 'Oia, Santorini', dress: 'Casual', desc: 'Pescado fresco junto al mar. Bajar los 300 escalones vale la pena.', visited: false },
-      { id: 2, name: 'Funky Gourmet', address: 'Atenas', dress: 'Elegante', desc: 'Cocina griega molecular con 2 estrellas Michelin. Menú degustación imperdible.', visited: false },
-      { id: 3, name: 'To Kati Allo', address: 'Mykonos', dress: 'Casual', desc: 'Gyros y souvlaki legendarios. Simple pero perfecto.', visited: false },
-    ],
-    description: {
-      climate: 'Veranos secos y calurosos (30-40°C). Las islas tienen brisa que alivia. Agosto es temporada alta; reservar todo con anticipación.',
-      culture: 'Grecia es la cuna de la civilización occidental. La hospitalidad (filoxenia) es valor fundamental. Las cenas son largas y compartidas.',
-      tips: 'Los ferries conectan las islas pero llénate con tiempo. En las tabernas, los platos se comparten. El ouzo se bebe con agua y meze.',
-      highlights: 'Atenas: Acrópolis al amanecer. Santorini: Puestas de sol épicas. Mykonos: Playas y vida nocturna. Creta: Gastronomía y ruinas minoicas.'
-    }
-  },
-  {
-    destination: 'Japón',
-    defaultName: 'Maravillas de Japón',
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
-    clothing: {
-      outfits: [
-        { id: 1, name: 'Templos de Kyoto', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', desc: 'Ropa modesta y cómoda, zapatos fáciles de quitar' },
-        { id: 2, name: 'Tokyo Street Style', image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=400&q=80', desc: 'Look urbano moderno: estilo Harajuku' },
-        { id: 3, name: 'Cena Kaiseki', image: 'https://images.unsplash.com/photo-1550639525-c97d455acf70?w=400&q=80', desc: 'Elegante y sobrio: la elegancia japonesa es minimalista' },
-      ],
-      checklist: [
-        { id: 1, text: 'Paraguas compacto', checked: false },
-        { id: 2, text: 'Zapatos sin cordones (templos)', checked: false },
-        { id: 3, text: 'Ropa en capas', checked: false },
-        { id: 4, text: 'Pañuelo de mano (no hay secadores)', checked: false },
-        { id: 5, text: 'Riñonera o bolso seguro', checked: false },
-        { id: 6, text: 'Adaptador eléctrico tipo A', checked: false },
-      ]
-    },
-    places: [
-      { id: 1, time: 'Mañana', name: 'Templo Senso-ji', desc: 'Templo budista más antiguo de Tokio en Asakusa', visited: false },
-      { id: 2, time: 'Mediodía', name: 'Shibuya Crossing', desc: 'El cruce peatonal más famoso del mundo', visited: false },
-      { id: 3, time: 'Tarde', name: 'Fushimi Inari', desc: 'Miles de torii rojos en Kyoto', visited: false },
-      { id: 4, time: 'Noche', name: 'Dotonbori, Osaka', desc: 'Luces de neón y la mejor street food de Japón', visited: false },
-    ],
-    restaurants: [
-      { id: 1, name: 'Ichiran Ramen', address: 'Shibuya, Tokio', dress: 'Casual', desc: 'Ramen tonkotsu en cabinas individuales. Personaliza tu caldo con el formulario.', visited: false },
-      { id: 2, name: 'Sukiyabashi Jiro', address: 'Ginza, Tokio', dress: 'Elegante', desc: 'El sushi más famoso del mundo (documental "Jiro Dreams of Sushi"). Reservar imposible.', visited: false },
-      { id: 3, name: 'Kichi Kichi', address: 'Kyoto', dress: 'Smart Casual', desc: 'Omurice (arroz con omelette) teatral. El chef hace un show al servirlo.', visited: false },
-    ],
-    description: {
-      climate: 'Septiembre: fin del verano, agradable (22-28°C). Posibles tifones. Otoño temprano con follaje comenzando a cambiar.',
-      culture: 'Japón combina tradición milenaria con tecnología de punta. La puntualidad es sagrada. El respeto y las reverencias son fundamentales.',
-      tips: 'Japón es cash-heavy: lleva yenes. El Japan Rail Pass es esencial para el Shinkansen. Los konbini (7-Eleven) tienen comida increíble 24/7.',
-      highlights: 'Tokio: Shibuya, Akihabara y Shinjuku. Kyoto: Templos dorados y geishas. Osaka: Capital gastronómica. Hiroshima: Parque Memorial de la Paz.'
-    }
-  }
-];
+import { destinationCatalog } from './data';
 
 // ─── COMPONENTS ─────────────────────────────────────────────────────────────────
 
@@ -240,6 +17,28 @@ function App() {
   const [newTrip, setNewTrip] = useState({ name: '', destination: '', date: '' });
   const [newClothingItem, setNewClothingItem] = useState('');
   const [slideDirection, setSlideDirection] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [randomSuggestions, setRandomSuggestions] = useState([]);
+
+  useEffect(() => {
+    if (showNewTripModal) {
+      refreshSuggestions();
+    } else {
+      setSearchQuery('');
+    }
+  }, [showNewTripModal]);
+
+  const refreshSuggestions = () => {
+    const shuffled = [...destinationCatalog].sort(() => 0.5 - Math.random());
+    setRandomSuggestions(shuffled.slice(0, 6));
+  };
+
+  const filteredDestinations = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return destinationCatalog.filter(d =>
+      d.destination.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
 
   const navigateTo = (view, trip = null, section = null) => {
     setSlideDirection('animate-slideIn');
@@ -472,52 +271,97 @@ function App() {
               >
                 <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5" />
                 <h2 className="text-xl font-bold text-slate-800 mb-1">Nuevo Viaje</h2>
-                <p className="text-sm text-slate-400 mb-5">Elegí un destino para cargar toda la info</p>
+                <p className="text-sm text-slate-400 mb-4">Elegí un destino para cargar toda la info</p>
 
-                {/* Destination selector grid */}
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Destino</label>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    {destinationCatalog.map(d => (
-                      <button
-                        key={d.destination}
-                        onClick={() => handleSelectDestination(d.destination)}
-                        className={`relative rounded-xl overflow-hidden h-20 group transition-all ${newTrip.destination === d.destination
-                            ? 'ring-2 ring-blue-500 ring-offset-2 scale-[1.02]'
-                            : 'hover:scale-[1.03] opacity-80 hover:opacity-100'
-                          }`}
-                      >
-                        <img src={d.image} alt={d.destination} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40" />
-                        <span className="absolute inset-0 flex items-center justify-center text-white font-semibold text-xs">{d.destination}</span>
-                        {newTrip.destination === d.destination && (
-                          <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                            <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                {/* Search Bar */}
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Buscá un país (ej: Vietnam, Canadá...)"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-100 border-none focus:ring-2 focus:ring-blue-400 outline-none text-sm transition-all"
+                  />
                 </div>
 
-                <div className="space-y-4 mt-4">
+                {/* Destination selection area */}
+                <div className="max-h-[30vh] overflow-y-auto pr-1">
+                  {searchQuery.trim() === '' ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sugerencias</label>
+                        <button onClick={refreshSuggestions} className="text-blue-500 p-1 hover:bg-blue-50 rounded-lg transition-colors">
+                          <RefreshCw className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {randomSuggestions.map(d => (
+                          <button
+                            key={d.destination}
+                            onClick={() => handleSelectDestination(d.destination)}
+                            className={`relative rounded-xl overflow-hidden h-16 group transition-all ${newTrip.destination === d.destination
+                              ? 'ring-2 ring-blue-500 ring-offset-2 scale-[1.02]'
+                              : 'hover:scale-[1.03] opacity-80 hover:opacity-100'
+                              }`}
+                          >
+                            <img src={d.image} alt={d.destination} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40" />
+                            <span className="absolute inset-x-1 bottom-1 text-white font-bold text-[10px] truncate">{d.destination}</span>
+                            {newTrip.destination === d.destination && (
+                              <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+                                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Resultados</label>
+                      {filteredDestinations.length > 0 ? (
+                        <div className="space-y-2">
+                          {filteredDestinations.map(d => (
+                            <button
+                              key={d.destination}
+                              onClick={() => handleSelectDestination(d.destination)}
+                              className={`w-full flex items-center gap-3 p-2 rounded-xl border transition-all ${newTrip.destination === d.destination
+                                ? 'bg-blue-50 border-blue-400 ring-1 ring-blue-400'
+                                : 'bg-white border-slate-100 hover:border-slate-300'
+                                }`}
+                            >
+                              <img src={d.image} alt={d.destination} className="w-10 h-10 rounded-lg object-cover" />
+                              <span className="font-semibold text-slate-700 text-sm">{d.destination}</span>
+                              {newTrip.destination === d.destination && <Check className="w-4 h-4 text-blue-500 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 text-center py-4">No encontramos ese destino, ¡pero podés elegir otro!</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3 mt-4">
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre del viaje</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nombre del viaje</label>
                     <input
                       type="text"
                       value={newTrip.name}
                       onChange={e => setNewTrip(p => ({ ...p, name: e.target.value }))}
                       placeholder={newTrip.destination ? `Ej: Mi viaje a ${newTrip.destination}` : 'Primero elegí un destino'}
-                      className="w-full mt-1.5 px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-sm"
+                      className="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-sm"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha del viaje</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Fecha del viaje</label>
                     <input
                       type="date"
                       value={newTrip.date}
                       onChange={e => setNewTrip(p => ({ ...p, date: e.target.value }))}
-                      className="w-full mt-1.5 px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-sm"
+                      className="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-sm"
                     />
                   </div>
                 </div>
